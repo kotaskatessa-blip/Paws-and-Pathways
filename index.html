@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paws & Pathways Cat Cafe & Rescue — Operations App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background:#fff5f7; }
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background:#ffe4e8; }
+    ::-webkit-scrollbar-thumb { background:#f43f5e; border-radius:9999px; }
+    .nav-active { border-color:white!important; color:white!important; font-weight:800!important; }
+    .field { width:100%; border:1px solid #fbcfe8; border-radius:12px; padding:9px 12px; font-size:13px; background:white; }
+    .field:focus { outline:2px solid #f43f5e; outline-offset:1px; }
+    .field-label { display:block; font-size:11px; font-weight:800; color:#334155; margin-bottom:5px; }
+    .section-title { font-size:12px; font-weight:800; color:#be123c; text-transform:uppercase; letter-spacing:.08em; border-top:1px solid #fce7f3; padding-top:15px; }
+    .pill { display:inline-flex; align-items:center; gap:5px; background:#fff1f2; color:#9f1239; padding:5px 9px; border-radius:9px; font-size:11px; font-weight:700; }
+    @media print {
+      body * { visibility:hidden!important; }
+      #guest-card-print-area, #guest-card-print-area * { visibility:visible!important; }
+      #guest-card-print-area { position:absolute; left:0; top:0; width:100%; margin:0!important; border:0!important; box-shadow:none!important; }
+      .no-print { display:none!important; }
+    }
+  </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+<header class="bg-gradient-to-r from-rose-600 via-pink-600 to-rose-500 text-white shadow-md sticky top-0 z-30 no-print">
+  <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="bg-white/20 p-2 rounded-xl text-2xl">🐾</div>
+      <div><h1 class="font-extrabold text-lg sm:text-xl tracking-tight">Paws & Pathways</h1><p class="text-xs text-pink-100 font-medium">Cat Cafe & Rescue Management</p></div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="hidden sm:inline-flex text-xs bg-white/15 px-3 py-1.5 rounded-full">● Local Browser Storage</span>
+      <button onclick="openCatModal()" class="bg-white text-rose-600 font-bold text-sm px-3.5 py-2 rounded-xl shadow-sm">+ New Intake</button>
+    </div>
+  </div>
+  <nav class="bg-rose-700/40 border-t border-white/15"><div class="max-w-6xl mx-auto px-2 sm:px-4 flex overflow-x-auto">
+    <button onclick="switchTab('cats')" id="nav-cats" class="nav-btn nav-active flex-1 sm:flex-none px-4 py-3 text-sm border-b-4 border-white whitespace-nowrap">🐱 Cats & Intake</button>
+    <button onclick="switchTab('care')" id="nav-care" class="nav-btn flex-1 sm:flex-none px-4 py-3 text-sm border-b-4 border-transparent text-pink-100 whitespace-nowrap">🍽️ Feeding & Potty</button>
+    <button onclick="switchTab('checklist')" id="nav-checklist" class="nav-btn flex-1 sm:flex-none px-4 py-3 text-sm border-b-4 border-transparent text-pink-100 whitespace-nowrap">✅ Shift Checklists</button>
+    <button onclick="switchTab('vet')" id="nav-vet" class="nav-btn flex-1 sm:flex-none px-4 py-3 text-sm border-b-4 border-transparent text-pink-100 whitespace-nowrap">🩺 Vet Log & Costs</button>
+  </div></nav>
+</header>
+
+<main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 no-print">
+  <section id="tab-cats" class="tab-content space-y-5">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl shadow-sm border border-pink-100">
+      <div class="flex flex-wrap gap-1.5" id="status-filters">
+        <button onclick="setCatFilter('All Active')" data-filter="All Active" class="filter-pill bg-rose-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold">All Active</button>
+        <button onclick="setCatFilter('In Lounge')" data-filter="In Lounge" class="filter-pill bg-pink-50 text-rose-700 px-3.5 py-1.5 rounded-xl text-xs font-bold">In Lounge</button>
+        <button onclick="setCatFilter('In Quarantine')" data-filter="In Quarantine" class="filter-pill bg-pink-50 text-rose-700 px-3.5 py-1.5 rounded-xl text-xs font-bold">In Quarantine</button>
+        <button onclick="setCatFilter('Single Hold')" data-filter="Single Hold" class="filter-pill bg-pink-50 text-rose-700 px-3.5 py-1.5 rounded-xl text-xs font-bold">Single Hold</button>
+        <button onclick="setCatFilter('Archive')" data-filter="Archive" class="filter-pill bg-slate-100 text-slate-600 px-3.5 py-1.5 rounded-xl text-xs font-bold">Past Outcomes Archive</button>
+      </div>
+      <input id="cat-search" oninput="renderCats()" placeholder="Search name or Intake ID#..." class="field md:max-w-xs" />
+    </div>
+    <div id="archive-stats-banner" class="hidden bg-gradient-to-r from-pink-100 to-rose-100 border border-rose-200 rounded-2xl p-4 flex flex-wrap justify-between gap-3">
+      <div><h3 class="font-extrabold text-rose-900 text-sm">Rescue Outcomes & Medical Summary</h3><p class="text-xs text-rose-700">Historical record of completed outcomes.</p></div>
+      <div class="flex gap-3 flex-wrap"><div class="bg-white px-4 py-2 rounded-xl text-center"><b id="stat-total-helped" class="text-lg text-rose-600">0</b><p class="text-[11px]">Total Cats Logged</p></div><div class="bg-white px-4 py-2 rounded-xl text-center"><b id="stat-total-adopted" class="text-lg text-emerald-600">0</b><p class="text-[11px]">Adopted</p></div><div class="bg-white px-4 py-2 rounded-xl text-center"><b id="stat-total-vet" class="text-lg">$0.00</b><p class="text-[11px]">Total Vet Spend</p></div></div>
+    </div>
+    <div id="cat-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+  </section>
+
+  <section id="tab-care" class="tab-content hidden space-y-4">
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div><h2 class="font-extrabold text-lg">Daily Feeding & Potty Log</h2><p class="text-xs text-slate-500">Quick-tap care tracking for active program cats.</p></div>
+      <div class="flex items-center gap-2"><label class="text-xs font-bold">Date:</label><input type="date" id="care-date-picker" onchange="renderCareGrid()" class="field max-w-44"></div>
+    </div>
+    <div id="care-list" class="space-y-3"></div>
+  </section>
+
+  <section id="tab-checklist" class="tab-content hidden space-y-4">
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div><h2 class="font-extrabold text-lg">Daily Cafe & Lounge Shift Checklists</h2><p class="text-xs text-slate-500">Opening, Mid-Day, and Closing tasks.</p></div>
+      <div class="flex gap-2"><input id="staff-initials-input" maxlength="4" placeholder="Your Initials" class="field max-w-36 uppercase"><button onclick="resetChecklist()" class="text-xs bg-slate-100 px-3 py-2 rounded-xl font-bold">Reset Day</button></div>
+    </div>
+    <div class="flex gap-2 flex-wrap">
+      <button onclick="switchShift('Opening')" id="shift-btn-Opening" class="shift-tab-btn bg-rose-600 text-white px-4 py-2 rounded-xl text-sm font-bold">🌅 Opening</button>
+      <button onclick="switchShift('Mid-Day')" id="shift-btn-Mid-Day" class="shift-tab-btn bg-white text-rose-700 border border-pink-200 px-4 py-2 rounded-xl text-sm font-bold">☀️ Mid-Day</button>
+      <button onclick="switchShift('Closing')" id="shift-btn-Closing" class="shift-tab-btn bg-white text-rose-700 border border-pink-200 px-4 py-2 rounded-xl text-sm font-bold">🌙 Closing</button>
+    </div>
+    <div id="checklist-container" class="bg-white rounded-2xl shadow-sm border border-pink-100 divide-y divide-pink-100"></div>
+  </section>
+
+  <section id="tab-vet" class="tab-content hidden space-y-4">
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-pink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div><h2 class="font-extrabold text-lg">Veterinary Appointments & Expense Tracker</h2><p class="text-xs text-slate-500">Schedule visits, record treatments, and track medical costs.</p></div>
+      <button onclick="openVetModal()" class="bg-rose-600 text-white text-sm font-bold px-4 py-2 rounded-xl">+ Log / Schedule Vet Visit</button>
+    </div>
+    <div id="vet-summary" class="bg-white rounded-2xl p-4 border border-pink-100 text-sm font-bold"></div>
+    <div id="vet-log-list" class="space-y-3"></div>
+  </section>
+</main>
+
+<!-- DATA BACKUP TOOLS -->
+<div class="max-w-6xl w-full mx-auto px-4 pb-6 no-print">
+  <div class="bg-white/80 border border-pink-100 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-3">
+    <div><p class="text-xs font-extrabold text-slate-700">Data & Backup</p><p class="text-[11px] text-slate-500">Export a backup regularly, especially before changing devices or browsers.</p></div>
+    <div class="flex gap-2"><button onclick="exportBackup()" class="bg-pink-100 text-rose-700 px-3 py-2 rounded-xl text-xs font-bold">Export Backup</button><label class="cursor-pointer bg-slate-100 text-slate-700 px-3 py-2 rounded-xl text-xs font-bold">Import Backup<input type="file" accept="application/json,.json" onchange="importBackup(event)" class="hidden"></label></div>
+  </div>
+</div>
+
+<!-- CAT PROFILE MODAL -->
+<div id="cat-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden overflow-y-auto p-3 sm:p-6 no-print">
+  <div class="bg-white max-w-3xl mx-auto rounded-3xl shadow-2xl border border-pink-100 overflow-hidden my-4">
+    <div class="bg-gradient-to-r from-rose-600 to-pink-600 text-white px-6 py-4 flex items-center justify-between gap-3">
+      <div><h2 id="cat-modal-title" class="font-extrabold text-lg">Cat Intake & Profile</h2><p class="text-xs text-pink-100">Edit this record as the cat progresses through the program.</p></div>
+      <div class="flex gap-2"><button type="button" id="btn-print-guest-card" onclick="openGuestCardModal()" class="hidden bg-white text-rose-600 text-xs font-extrabold px-3 py-2 rounded-xl">🖨️ Guest Card</button><button onclick="closeCatModal()" class="text-2xl px-2">&times;</button></div>
+    </div>
+    <form id="cat-form" onsubmit="saveCatProfile(event)" class="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+      <input type="hidden" id="edit-cat-id">
+      <div class="bg-pink-50 p-4 rounded-2xl border border-pink-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+        <div><label class="field-label">Intake Date *</label><input type="date" id="f-intake-date" required class="field"></div>
+        <div><label class="field-label">Intake ID# *</label><input id="f-intake-id" required placeholder="PP-2026-001" class="field"></div>
+        <div><label class="field-label">Employee Initials</label><input id="f-initials" maxlength="4" class="field uppercase"></div>
+        <div><label class="field-label text-rose-700">Active Area *</label><select id="f-program-status" class="field font-bold"><option>In Lounge</option><option>In Quarantine</option><option>Single Hold</option></select></div>
+      </div>
+      <div class="grid sm:grid-cols-3 gap-4 items-center">
+        <div class="flex flex-col items-center"><img id="f-photo-preview" alt="Cat preview" class="w-32 h-32 object-cover rounded-2xl border-2 border-pink-200 bg-pink-50 mb-2" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='100%25' height='100%25' fill='%23ffe4e8'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' font-size='42'%3E🐾%3C/text%3E%3C/svg%3E"><label class="cursor-pointer bg-pink-100 text-rose-700 text-xs font-bold px-3 py-2 rounded-xl">📷 Upload Photo<input type="file" accept="image/*" onchange="handlePhotoUpload(event)" class="hidden"></label><input type="hidden" id="f-photo-url"></div>
+        <div class="sm:col-span-2 space-y-3"><div><label class="field-label">Name Given to Cat *</label><input id="f-name" required class="field text-base font-bold" placeholder="Cat name"></div><div><label class="field-label">Customer-Friendly Bio</label><textarea id="f-guest-bio" rows="2" class="field" placeholder="A short, friendly bio for the guest card"></textarea></div></div>
+      </div>
+      <h3 class="section-title">1. Physical & Identification Details</h3>
+      <div class="grid sm:grid-cols-3 gap-3">
+        <div><label class="field-label">Estimated Age</label><select id="f-age" class="field"><option value="">Select age</option><option>&lt; 6 mos</option><option>6–12 mos</option><option>1–7 yrs</option><option>7+ yrs</option></select></div>
+        <div><label class="field-label">Sex</label><select id="f-sex" class="field"><option value="">Select</option><option>Female</option><option>Male</option><option>Unknown</option></select></div>
+        <div><label class="field-label">Body Condition</label><select id="f-body-condition" class="field"><option value="">Select</option><option>Ideal</option><option>Underweight</option><option>Emaciated</option><option>Overweight</option></select></div>
+      </div>
+      <div><label class="field-label">Color / Coat / Distinguishing Marks</label><input id="f-coat" class="field" placeholder="Coat, colors, markings"></div>
+      <h3 class="section-title">2. Rescue Background & Circumstances</h3>
+      <div><label class="field-label">Rescue Location / Park</label><input id="f-location" class="field"></div>
+      <div><label class="field-label">Circumstances of Rescue</label><div id="cb-circumstances" class="flex flex-wrap gap-2"><label class="pill"><input type="checkbox" value="Injured"> Injured</label><label class="pill"><input type="checkbox" value="Sick"> Sick</label><label class="pill"><input type="checkbox" value="Pregnant / Nursing"> Pregnant / Nursing</label><label class="pill"><input type="checkbox" value="Stray"> Stray</label><label class="pill"><input type="checkbox" value="Owner Surrender"> Owner Surrender</label></div><input id="f-circumstances-other" class="field mt-2" placeholder="Other circumstances"></div>
+      <h3 class="section-title">3. Initial Health & Behavioral Assessment</h3>
+      <div><label class="field-label">Temperament</label><div id="cb-temperament" class="flex flex-wrap gap-2"><label class="pill"><input type="checkbox" value="Alert"> Alert</label><label class="pill"><input type="checkbox" value="Lethargic"> Lethargic</label><label class="pill"><input type="checkbox" value="Fearful"> Fearful</label><label class="pill"><input type="checkbox" value="Friendly"> Friendly</label><label class="pill"><input type="checkbox" value="Aggressive"> Aggressive</label></div></div>
+      <div><label class="field-label">Injuries</label><div id="cb-injuries" class="flex flex-wrap gap-2"><label class="pill"><input type="checkbox" value="None"> None</label><label class="pill"><input type="checkbox" value="Wounds"> Wounds</label><label class="pill"><input type="checkbox" value="Limping"> Limping</label><label class="pill"><input type="checkbox" value="Eye/Ear/Nose Issues"> Eye/Ear/Nose Issues</label></div><input id="f-injuries-other" class="field mt-2" placeholder="Other injuries"></div>
+      <div><label class="field-label">Illness / Physical Signs</label><div id="cb-illness" class="flex flex-wrap gap-2"><label class="pill"><input type="checkbox" value="None"> None</label><label class="pill"><input type="checkbox" value="Sneezing"> Sneezing</label><label class="pill"><input type="checkbox" value="Runny eyes"> Runny eyes</label><label class="pill"><input type="checkbox" value="Vomiting"> Vomiting</label><label class="pill"><input type="checkbox" value="Diarrhea"> Diarrhea</label><label class="pill"><input type="checkbox" value="Matted"> Matted</label><label class="pill"><input type="checkbox" value="Fleas"> Fleas</label></div><input id="f-illness-other" class="field mt-2" placeholder="Other signs"></div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div><label class="field-label">Approached for Food?</label><select id="f-food-approach" class="field"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+        <div><label class="field-label">Handling Tolerance</label><select id="f-handling" class="field"><option value="">Select</option><option>Yes</option><option>With difficulty</option><option>No</option></select></div>
+        <div><label class="field-label">Vocal?</label><select id="f-vocal" class="field"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+        <div><label class="field-label">Reaction to Carrier</label><select id="f-carrier" class="field"><option value="">Select</option><option>Calm</option><option>Stressed</option><option>Panicked</option><option>Other</option></select></div>
+      </div>
+      <h3 class="section-title">4. Staff Notes & Observations (Private)</h3>
+      <textarea id="f-notes" rows="3" class="field" placeholder="Internal notes, feeding preferences, behavior progress..."></textarea>
+      <div class="bg-slate-50 p-4 rounded-2xl space-y-3"><h3 class="text-xs font-extrabold uppercase tracking-wider">5. Intake Sign-Off & Final Outcome</h3>
+        <div class="grid sm:grid-cols-2 gap-3"><div><label class="field-label">Intake Completion Signature</label><input id="f-signature" class="field" placeholder="Staff full name"></div><div><label class="field-label">Final Outcome Status</label><select id="f-outcome" onchange="toggleOutcomeFields()" class="field font-bold"><option>Still in Program</option><option>Adopted</option><option>Returned (TNR)</option><option>Transferred</option><option>Deceased</option></select></div></div>
+        <div id="outcome-extra-fields" class="hidden grid sm:grid-cols-2 gap-3"><div><label class="field-label">Outcome Date</label><input type="date" id="f-outcome-date" class="field"></div><div><label id="outcome-detail-label" class="field-label">Outcome Details</label><input id="f-outcome-detail" class="field" placeholder="Name / organization / details"></div></div>
+      </div>
+      <div class="flex flex-wrap justify-between gap-2 pt-2"><button type="button" id="delete-cat-btn" onclick="deleteCurrentCat()" class="hidden text-red-600 text-sm font-bold px-3 py-2">Delete Record</button><div class="ml-auto flex gap-2"><button type="button" onclick="closeCatModal()" class="px-4 py-2 rounded-xl text-sm font-bold text-slate-600">Cancel</button><button type="submit" class="bg-rose-600 text-white px-6 py-2.5 rounded-xl text-sm font-extrabold">Save Cat Profile</button></div></div>
+    </form>
+  </div>
+</div>
+
+<!-- PRINTABLE GUEST CARD -->
+<div id="guest-card-modal" class="fixed inset-0 bg-slate-900/70 z-50 hidden overflow-y-auto p-4 flex items-center justify-center">
+  <div class="bg-white max-w-lg w-full rounded-3xl shadow-2xl overflow-hidden">
+    <div class="bg-slate-800 text-white px-5 py-3 flex items-center justify-between no-print"><span class="text-xs font-bold uppercase">Guest Card Preview</span><div class="flex gap-2"><button onclick="window.print()" class="bg-rose-500 text-white text-xs font-bold px-3 py-2 rounded-lg">🖨️ Print</button><button onclick="closeGuestCardModal()" class="text-xl px-2">&times;</button></div></div>
+    <div id="guest-card-print-area" class="p-8 text-center bg-gradient-to-b from-pink-50 via-white to-rose-50 border-8 border-pink-200 m-3 rounded-2xl">
+      <div class="text-xs font-extrabold uppercase tracking-widest text-rose-500 mb-1">🐾 Paws & Pathways Cat Cafe & Rescue</div><h1 id="gc-name" class="text-4xl font-extrabold text-slate-900 mb-4"></h1><img id="gc-photo" alt="Cat" class="w-60 h-60 object-cover rounded-3xl mx-auto shadow-lg border-4 border-white mb-5"><div id="gc-badges" class="flex flex-wrap justify-center gap-2 mb-4"></div><div class="bg-white border border-pink-200 rounded-2xl p-4 mb-5"><h3 class="text-xs font-extrabold uppercase text-rose-600 mb-1">About Me</h3><p id="gc-bio" class="text-sm text-slate-700 leading-relaxed"></p></div><div class="bg-rose-600 text-white rounded-xl py-3 px-4 font-bold text-sm">💖 Interested in adopting me? Ask a team member!</div>
+    </div>
+  </div>
+</div>
+
+<!-- VET MODAL -->
+<div id="vet-modal" class="fixed inset-0 bg-slate-900/60 z-40 hidden overflow-y-auto p-4 flex items-center justify-center no-print">
+  <div class="bg-white max-w-lg w-full rounded-3xl shadow-2xl overflow-hidden"><div class="bg-rose-600 text-white px-6 py-4 flex justify-between items-center"><h2 class="font-extrabold text-lg">Log / Schedule Vet Visit</h2><button onclick="closeVetModal()" class="text-2xl">&times;</button></div>
+    <form onsubmit="saveVetVisit(event)" class="p-6 space-y-3"><input type="hidden" id="v-edit-id">
+      <div><label class="field-label">Select Cat *</label><select id="v-cat-id" required class="field"></select></div>
+      <div class="grid grid-cols-2 gap-3"><div><label class="field-label">Visit Date *</label><input type="date" id="v-date" required class="field"></div><div><label class="field-label">Cost ($)</label><input type="number" step="0.01" min="0" id="v-cost" class="field" placeholder="0.00"></div></div>
+      <div><label class="field-label">Clinic / Veterinarian *</label><input id="v-clinic" required class="field"></div>
+      <div><label class="field-label">Reason for Visit *</label><input id="v-reason" required class="field"></div>
+      <div><label class="field-label">Treatment Provided</label><textarea id="v-treatment" rows="2" class="field"></textarea></div>
+      <div><label class="field-label">Next Steps / Follow-up</label><input id="v-next" class="field"></div>
+      <div class="flex justify-end gap-2 pt-2"><button type="button" onclick="closeVetModal()" class="px-4 py-2 text-sm font-bold">Cancel</button><button type="submit" class="bg-rose-600 text-white px-5 py-2 rounded-xl text-sm font-extrabold">Save Vet Entry</button></div>
+    </form>
+  </div>
+</div>
+
+<script>
+'use strict';
+// Empty by design: no sample/template cats, vet entries, or care records.
+const STORAGE_KEY = 'pawsPathways_v1';
+const today = () => new Date().toLocaleDateString('en-CA');
+const blankChecklist = () => ({
+  'Opening': [
+    'Morning headcount & visual health check of all cats (Lounge, Quarantine, Single Hold)',
+    'Serve morning wet/dry meals & refresh water bowls',
+    'Scoop litter boxes, log potty output, and sweep mats',
+    'Sanitize Cat Area tables, Quiet Study desks, and door handles',
+    'Power on Clover register, verify cash till & receipt paper',
+    'Restock Drink Bar and Kitty Nibbles'
+  ],
+  'Mid-Day': [
+    'Hourly litter box scoop & hairball/spill check',
+    'Check guest timers for Cat Lounge & Quiet Study',
+    'Administer scheduled medications & check Quarantine cats',
+    'Restock cups, lids, straws, ice, and snacks'
+  ],
+  'Closing': [
+    'Evening headcount & secure all cats in overnight areas',
+    'Wash food bowls, serve evening meals, and refill fresh water',
+    'Deep-scoop litter boxes, remove waste, vacuum/mop floors',
+    'Sanitize blenders, boba scoops, syrup pumps & refrigerate perishables',
+    'Run POS end-of-day closeout & secure cash drawer'
+  ]
+});
+let cats = [], vetLogs = [], careLogs = {}, checklists = blankChecklist();
+let currentCatFilter = 'All Active', currentShift = 'Opening';
+
+function loadData() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    if (saved && typeof saved === 'object') {
+      cats = Array.isArray(saved.cats) ? saved.cats : [];
+      vetLogs = Array.isArray(saved.vetLogs) ? saved.vetLogs : [];
+      careLogs = saved.careLogs && typeof saved.careLogs === 'object' ? saved.careLogs : {};
+      checklists = saved.checklists || blankChecklist();
+    }
+  } catch (e) { console.warn('Saved data could not be read.', e); }
+}
+function saveAll() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({cats, vetLogs, careLogs, checklists})); }
+  catch (e) { alert('Your browser storage is full. Consider removing large photos or exporting a backup.'); }
+}
+function escapeHTML(value='') {
+  return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  document.getElementById('tab-'+tab).classList.remove('hidden');
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('nav-active'));
+  document.getElementById('nav-'+tab).classList.add('nav-active');
+  if (tab==='cats') renderCats(); if (tab==='care') renderCareGrid(); if (tab==='checklist') renderChecklist(); if (tab==='vet') renderVetLogs();
+}
+function setCatFilter(filter) {
+  currentCatFilter = filter;
+  document.querySelectorAll('.filter-pill').forEach(b => {
+    b.className = 'filter-pill px-3.5 py-1.5 rounded-xl text-xs font-bold '+(b.dataset.filter===filter?'bg-rose-600 text-white':'bg-pink-50 text-rose-700');
+  });
+  renderCats();
+}
+function renderCats() {
+  const search = (document.getElementById('cat-search')?.value || '').toLowerCase();
+  const archive = currentCatFilter === 'Archive';
+  document.getElementById('archive-stats-banner').classList.toggle('hidden', !archive);
+  if (archive) {
+    document.getElementById('stat-total-helped').textContent = cats.length;
+    document.getElementById('stat-total-adopted').textContent = cats.filter(c=>c.outcome==='Adopted').length;
+    document.getElementById('stat-total-vet').textContent = '$'+vetLogs.reduce((s,v)=>s+(Number(v.cost)||0),0).toFixed(2);
+  }
+  const filtered = cats.filter(c => {
+    const match = (c.name+' '+c.intakeId).toLowerCase().includes(search);
+    if (!match) return false;
+    if (archive) return c.outcome && c.outcome !== 'Still in Program';
+    if (c.outcome !== 'Still in Program') return false;
+    return currentCatFilter==='All Active' || c.programStatus===currentCatFilter;
+  });
+  const grid = document.getElementById('cat-grid');
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="col-span-full bg-white rounded-2xl p-10 text-center border border-pink-100"><div class="text-4xl mb-3">🐾</div><p class="font-extrabold text-slate-700">${archive?'No archived cats yet.':'Your cat list is empty.'}</p><p class="text-sm text-slate-500 mt-1">Add your first rescue using <b>+ New Intake</b>.</p></div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(c => {
+    const status = c.outcome !== 'Still in Program' ? c.outcome : c.programStatus;
+    const color = c.outcome !== 'Still in Program' ? 'bg-slate-700' : c.programStatus==='In Lounge'?'bg-emerald-500':c.programStatus==='In Quarantine'?'bg-amber-500':'bg-purple-600';
+    const photo = c.photo || '';
+    const tags = [...(c.temperament||[]),...(c.illness||[]).filter(x=>x!=='None').map(x=>'⚠ '+x)];
+    return `<article class="cursor-pointer bg-white rounded-2xl shadow-sm hover:shadow-md border border-pink-100 overflow-hidden flex flex-col" onclick="openCatModal('${c.id}')">
+      <div class="relative h-48 bg-pink-100">${photo?`<img src="${photo}" alt="${escapeHTML(c.name)}" class="w-full h-full object-cover">`:'<div class="h-full flex items-center justify-center text-5xl">🐾</div>'}
+      <span class="absolute top-3 left-3 ${color} text-white text-[11px] font-extrabold px-3 py-1 rounded-full">${escapeHTML(status)}</span>
+      <span class="absolute top-3 right-3 bg-white/90 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-lg">${escapeHTML(c.intakeId)}</span></div>
+      <div class="p-4 flex-1 flex flex-col justify-between space-y-3"><div><div class="flex justify-between gap-2"><h3 class="font-extrabold text-lg">${escapeHTML(c.name)}</h3><span class="text-xs font-bold text-rose-600">${escapeHTML(c.age||'')} ${c.sex?'• '+escapeHTML(c.sex):''}</span></div><p class="text-xs text-slate-500 mt-1">${escapeHTML(c.coat||'')}</p><div class="flex flex-wrap gap-1 mt-2">${tags.map(t=>`<span class="pill">${escapeHTML(t)}</span>`).join('')}</div></div>
+      <div class="pt-2 border-t border-pink-50 flex justify-between text-xs text-slate-400 font-semibold"><span>Intake: ${escapeHTML(c.intakeDate||'')}</span><span class="text-rose-600">Edit Profile →</span></div></div></article>`;
+  }).join('');
+}
+const fieldIds = ['intake-date','intake-id','initials','program-status','name','guest-bio','photo-url','age','sex','body-condition','coat','location','circumstances-other','injuries-other','illness-other','food-approach','handling','vocal','carrier','notes','signature','outcome','outcome-date','outcome-detail'];
+const formKey = id => 'f-'+id;
+function checkedValues(containerId) { return [...document.querySelectorAll('#'+containerId+' input[type=checkbox]:checked')].map(x=>x.value); }
+function setChecks(containerId, values=[]) { document.querySelectorAll('#'+containerId+' input[type=checkbox]').forEach(x=>x.checked=values.includes(x.value)); }
+function openCatModal(id=null) {
+  const form = document.getElementById('cat-form'); form.reset();
+  document.getElementById('edit-cat-id').value = id || '';
+  document.getElementById('f-intake-date').value = today();
+  document.getElementById('f-photo-url').value = '';
+  document.getElementById('f-photo-preview').src = '';
+  ['cb-circumstances','cb-temperament','cb-injuries','cb-illness'].forEach(x=>setChecks(x,[]));
+  const cat = cats.find(c=>c.id===id);
+  document.getElementById('cat-modal-title').textContent = cat?'Edit Profile: '+cat.name:'New Cat Intake Form';
+  document.getElementById('btn-print-guest-card').classList.toggle('hidden',!cat);
+  document.getElementById('delete-cat-btn').classList.toggle('hidden',!cat);
+  if (cat) {
+    fieldIds.forEach(k => { const el=document.getElementById(formKey(k)); if(el) el.value=cat[k.replaceAll('-','')] ?? cat[({ 'intake-date':'intakeDate','intake-id':'intakeId','program-status':'programStatus','guest-bio':'guestBio','photo-url':'photo','body-condition':'bodyCondition','circumstances-other':'circumstancesOther','injuries-other':'injuriesOther','illness-other':'illnessOther','food-approach':'foodApproach','outcome-date':'outcomeDate','outcome-detail':'outcomeDetail'}[k]||k)] ?? ''; });
+    document.getElementById('f-photo-preview').src=cat.photo||'';
+    setChecks('cb-circumstances',cat.circumstances); setChecks('cb-temperament',cat.temperament); setChecks('cb-injuries',cat.injuries); setChecks('cb-illness',cat.illness);
+  }
+  toggleOutcomeFields(); document.getElementById('cat-modal').classList.remove('hidden');
+}
+function closeCatModal(){document.getElementById('cat-modal').classList.add('hidden');}
+function handlePhotoUpload(event) {
+  const file=event.target.files?.[0]; if(!file) return;
+  if(file.size>1200000){alert('Please choose an image smaller than 1.2 MB so it can fit in browser storage.');event.target.value='';return;}
+  const reader=new FileReader(); reader.onload=()=>{document.getElementById('f-photo-url').value=reader.result;document.getElementById('f-photo-preview').src=reader.result;};reader.readAsDataURL(file);
+}
+function toggleOutcomeFields() {
+  const outcome=document.getElementById('f-outcome').value;
+  const show=outcome!=='Still in Program';
+  document.getElementById('outcome-extra-fields').classList.toggle('hidden',!show);
+  const labels={'Adopted':'Adopter Name','Returned (TNR)':'Return Location / Details','Transferred':'Receiving Organization','Deceased':'Additional Details'};
+  document.getElementById('outcome-detail-label').textContent=labels[outcome]||'Outcome Details';
+}
+function saveCatProfile(event) {
+  event.preventDefault();
+  const id=document.getElementById('edit-cat-id').value || 'cat-'+crypto.randomUUID();
+  const old=cats.find(c=>c.id===id);
+  const cat={id};
+  const map={'intake-date':'intakeDate','intake-id':'intakeId','program-status':'programStatus','guest-bio':'guestBio','photo-url':'photo','body-condition':'bodyCondition','circumstances-other':'circumstancesOther','injuries-other':'injuriesOther','illness-other':'illnessOther','food-approach':'foodApproach','outcome-date':'outcomeDate','outcome-detail':'outcomeDetail'};
+  fieldIds.forEach(k=>cat[map[k]||k.replaceAll('-','')]=document.getElementById(formKey(k)).value.trim());
+  cat.circumstances=checkedValues('cb-circumstances'); cat.temperament=checkedValues('cb-temperament'); cat.injuries=checkedValues('cb-injuries'); cat.illness=checkedValues('cb-illness');
+  if(!cat.intakeId || cats.some(c=>c.intakeId.toLowerCase()===cat.intakeId.toLowerCase()&&c.id!==id)){alert('Please enter a unique Intake ID#.');return;}
+  if(old) cats=cats.map(c=>c.id===id?cat:c); else cats.push(cat);
+  saveAll(); closeCatModal(); renderCats(); renderCareGrid(); renderVetLogs();
+}
+function deleteCurrentCat() {
+  const id=document.getElementById('edit-cat-id').value; if(!id)return;
+  if(!confirm('Delete this cat profile? Related care and vet records will also be deleted.'))return;
+  cats=cats.filter(c=>c.id!==id); vetLogs=vetLogs.filter(v=>v.catId!==id);
+  Object.keys(careLogs).forEach(day=>{if(careLogs[day])delete careLogs[day][id];});
+  saveAll();closeCatModal();renderCats();renderCareGrid();renderVetLogs();
+}
+function openGuestCardModal() {
+  const id=document.getElementById('edit-cat-id').value, c=cats.find(x=>x.id===id); if(!c)return;
+  document.getElementById('gc-name').textContent=c.name;
+  document.getElementById('gc-photo').src=c.photo||'';
+  document.getElementById('gc-bio').textContent=c.guestBio||'Ask a team member to learn more about me!';
+  document.getElementById('gc-badges').innerHTML=[c.age,c.sex,c.temperament?.includes('Friendly')?'Friendly':null].filter(Boolean).map(x=>`<span class="pill">${escapeHTML(x)}</span>`).join('');
+  document.getElementById('guest-card-modal').classList.remove('hidden');
+}
+function closeGuestCardModal(){document.getElementById('guest-card-modal').classList.add('hidden');}
+
+function activeCats(){return cats.filter(c=>c.outcome==='Still in Program');}
+function renderCareGrid() {
+  const day=document.getElementById('care-date-picker').value||today();
+  document.getElementById('care-date-picker').value=day;
+  const list=document.getElementById('care-list'), current=activeCats();
+  if(!current.length){list.innerHTML='<div class="bg-white p-10 rounded-2xl text-center border border-pink-100"><div class="text-4xl mb-2">🍽️</div><b>No active cats to track yet.</b><p class="text-sm text-slate-500 mt-1">Add a cat intake to begin daily care logging.</p></div>';return;}
+  careLogs[day] ||= {};
+  list.innerHTML=current.map(c=>{
+    const log=careLogs[day][c.id]||{};
+    const opts=(key,items)=>`<div class="flex flex-wrap gap-2">${items.map(v=>`<label class="pill"><input type="checkbox" ${((log[key]||[]).includes(v))?'checked':''} onchange="updateCare('${c.id}','${key}','${v}',this.checked)"> ${v}</label>`).join('')}</div>`;
+    return `<div class="bg-white p-4 rounded-2xl border border-pink-100 shadow-sm"><div class="flex flex-wrap justify-between gap-2 mb-3"><div><h3 class="font-extrabold">${escapeHTML(c.name)}</h3><p class="text-xs text-slate-500">${escapeHTML(c.programStatus)} · ${escapeHTML(c.intakeId)}</p></div><span class="text-xs text-rose-600 font-bold">${escapeHTML(day)}</span></div>
+    <div class="grid md:grid-cols-2 gap-4"><div><label class="field-label">Meals</label>${opts('meals',['AM wet','AM dry','PM wet','PM dry','Treats'])}<input class="field mt-2" placeholder="Food / amount / notes" value="${escapeHTML(log.foodNotes||'')}" onchange="updateCareNote('${c.id}','foodNotes',this.value)"></div>
+    <div><label class="field-label">Potty / Litter</label>${opts('potty',['Urine','Stool','No output','Diarrhea','Vomiting','Scooped'])}<input class="field mt-2" placeholder="Litter / output notes" value="${escapeHTML(log.pottyNotes||'')}" onchange="updateCareNote('${c.id}','pottyNotes',this.value)"></div></div>
+    <div class="mt-3"><label class="field-label">General health / medication notes</label><input class="field" value="${escapeHTML(log.notes||'')}" placeholder="Observations or medication notes" onchange="updateCareNote('${c.id}','notes',this.value)"></div></div>`;
+  }).join('');
+}
+function updateCare(catId,key,value,checked){const day=document.getElementById('care-date-picker').value;careLogs[day] ||= {};careLogs[day][catId] ||= {};const arr=careLogs[day][catId][key]||[];careLogs[day][catId][key]=checked?[...new Set([...arr,value])]:arr.filter(x=>x!==value);saveAll();}
+function updateCareNote(catId,key,value){const day=document.getElementById('care-date-picker').value;careLogs[day] ||= {};careLogs[day][catId] ||= {};careLogs[day][catId][key]=value;saveAll();}
+
+function ensureChecklistShape(){const defaults=blankChecklist();for(const shift of Object.keys(defaults)){if(!Array.isArray(checklists[shift]))checklists[shift]=defaults[shift].map((text,i)=>({id:shift+i,text,done:false,by:'',time:''}));else if(checklists[shift].length&&typeof checklists[shift][0]==='string')checklists[shift]=checklists[shift].map((text,i)=>({id:shift+i,text,done:false,by:'',time:''}));}}
+function switchShift(shift){currentShift=shift;document.querySelectorAll('.shift-tab-btn').forEach(b=>{b.className='shift-tab-btn bg-white text-rose-700 border border-pink-200 px-4 py-2 rounded-xl text-sm font-bold';});document.getElementById('shift-btn-'+shift).className='shift-tab-btn bg-rose-600 text-white px-4 py-2 rounded-xl text-sm font-bold';renderChecklist();}
+function renderChecklist(){ensureChecklistShape();const items=checklists[currentShift]||[];const done=items.filter(x=>x.done).length;document.getElementById('checklist-container').innerHTML=`<div class="p-4 flex justify-between text-sm"><b>${currentShift} Shift</b><span class="text-rose-600 font-bold">${done}/${items.length} complete</span></div>`+items.map((x,i)=>`<label class="p-4 flex gap-3 items-start cursor-pointer hover:bg-pink-50/50"><input type="checkbox" class="mt-1 w-4 h-4 accent-rose-600" ${x.done?'checked':''} onchange="toggleChecklist(${i},this.checked)"><span class="flex-1"><span class="text-sm ${x.done?'line-through text-slate-400':'font-semibold'}">${escapeHTML(x.text)}</span>${x.done?`<span class="block text-[11px] text-slate-400 mt-1">Completed by ${escapeHTML(x.by||'—')} · ${escapeHTML(x.time||'')}</span>`:''}</span></label>`).join('')||'<p class="p-6 text-sm text-slate-500">No checklist tasks.</p>';}
+function toggleChecklist(i,done){ensureChecklistShape();const initials=document.getElementById('staff-initials-input').value.trim().toUpperCase();checklists[currentShift][i].done=done;checklists[currentShift][i].by=done?(initials||'Staff'):'';checklists[currentShift][i].time=done?new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';saveAll();renderChecklist();}
+function resetChecklist(){if(!confirm('Reset all shift checklist tasks for a new day?'))return;checklists=blankChecklist();ensureChecklistShape();saveAll();renderChecklist();}
+
+function openVetModal(id=null){if(!activeCats().length&&!cats.length){alert('Add a cat profile before creating a vet entry.');return;}const form=document.querySelector('#vet-modal form');form.reset();document.getElementById('v-edit-id').value=id||'';const select=document.getElementById('v-cat-id');select.innerHTML=cats.map(c=>`<option value="${c.id}">${escapeHTML(c.name)} (${escapeHTML(c.intakeId)})</option>`).join('');document.getElementById('v-date').value=today();const entry=vetLogs.find(v=>v.id===id);if(entry){document.getElementById('v-cat-id').value=entry.catId;document.getElementById('v-date').value=entry.date;document.getElementById('v-cost').value=entry.cost;document.getElementById('v-clinic').value=entry.clinic;document.getElementById('v-reason').value=entry.reason;document.getElementById('v-treatment').value=entry.treatment||'';document.getElementById('v-next').value=entry.next||'';}document.getElementById('vet-modal').classList.remove('hidden');}
+function closeVetModal(){document.getElementById('vet-modal').classList.add('hidden');}
+function saveVetVisit(event){event.preventDefault();const id=document.getElementById('v-edit-id').value||'vet-'+crypto.randomUUID();const entry={id,catId:document.getElementById('v-cat-id').value,date:document.getElementById('v-date').value,cost:Number(document.getElementById('v-cost').value)||0,clinic:document.getElementById('v-clinic').value.trim(),reason:document.getElementById('v-reason').value.trim(),treatment:document.getElementById('v-treatment').value.trim(),next:document.getElementById('v-next').value.trim()};if(vetLogs.some(v=>v.id===id))vetLogs=vetLogs.map(v=>v.id===id?entry:v);else vetLogs.push(entry);saveAll();closeVetModal();renderVetLogs();}
+function renderVetLogs(){const total=vetLogs.reduce((s,v)=>s+(Number(v.cost)||0),0);document.getElementById('vet-summary').textContent=`Total recorded veterinary expenses: $${total.toFixed(2)} · ${vetLogs.length} visit(s)`;const list=document.getElementById('vet-log-list');if(!vetLogs.length){list.innerHTML='<div class="bg-white p-10 rounded-2xl text-center border border-pink-100"><div class="text-4xl mb-2">🩺</div><b>No vet visits recorded yet.</b><p class="text-sm text-slate-500 mt-1">Schedule or log your first appointment.</p></div>';return;}list.innerHTML=[...vetLogs].sort((a,b)=>b.date.localeCompare(a.date)).map(v=>{const c=cats.find(x=>x.id===v.catId);return `<article class="bg-white p-4 rounded-2xl border border-pink-100 shadow-sm"><div class="flex flex-wrap justify-between gap-2"><div><h3 class="font-extrabold">${escapeHTML(c?.name||'Deleted cat')}</h3><p class="text-xs text-slate-500">${escapeHTML(v.date)} · ${escapeHTML(v.clinic)}</p></div><b class="text-rose-600">$${Number(v.cost||0).toFixed(2)}</b></div><p class="text-sm font-bold mt-3">${escapeHTML(v.reason)}</p>${v.treatment?`<p class="text-xs text-slate-600 mt-1">${escapeHTML(v.treatment)}</p>`:''}${v.next?`<p class="text-xs text-rose-700 mt-1">Follow-up: ${escapeHTML(v.next)}</p>`:''}<div class="flex justify-end gap-3 mt-3"><button onclick="openVetModal('${v.id}')" class="text-xs font-bold text-rose-600">Edit</button><button onclick="deleteVet('${v.id}')" class="text-xs font-bold text-slate-500">Delete</button></div></article>`;}).join('');}
+function deleteVet(id){if(!confirm('Delete this vet entry?'))return;vetLogs=vetLogs.filter(v=>v.id!==id);saveAll();renderVetLogs();}
+
+function exportBackup(){const blob=new Blob([JSON.stringify({cats,vetLogs,careLogs,checklists},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='paws-pathways-backup-'+today()+'.json';a.click();URL.revokeObjectURL(url);}
+function importBackup(event){const file=event.target.files?.[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const data=JSON.parse(reader.result);if(!Array.isArray(data.cats)||!Array.isArray(data.vetLogs))throw new Error('Invalid backup');if(!confirm('Importing replaces the current data in this browser. Continue?'))return;cats=data.cats;vetLogs=data.vetLogs;careLogs=data.careLogs||{};checklists=data.checklists||blankChecklist();saveAll();renderCats();renderCareGrid();renderVetLogs();alert('Backup imported.');}catch(e){alert('That backup file could not be read.');}};reader.readAsText(file);event.target.value='';}
+loadData();ensureChecklistShape();document.getElementById('care-date-picker').value=today();renderCats();
+</script>
+</body>
+</html>
